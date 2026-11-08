@@ -1,46 +1,53 @@
-name: Deploy Backend .NET
+name: Build Backend .NET (legado - deploy desativado)
+
+# REPOSITORIO LEGADO (Mantec 2.0).
+# A versao oficial em producao e o repositorio mantecsystems1/MantecAssistBack.
+# O deploy no servidor foi desativado em 2026-11-08: este workflow apenas
+# valida o build da imagem em um runner do GitHub, sem publicar no Docker Hub
+# e sem tocar no servidor de producao (runner self-hosted).
+# Para reativar, volte runs-on para [self-hosted, prod] e descomente os passos.
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  deploy:
-    runs-on: [self-hosted, prod]
+  build:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Login Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
       - name: Definir versão
         run: |
           echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-      - name: Build image
+      - name: Build image (somente validação)
         run: |
           docker build \
-            -t mantecsystems/mantec2-back:latest \
             -t mantecsystems/mantec2-back:${IMAGE_TAG} \
             .
 
-      - name: Push image
-        run: |
-          docker push mantecsystems/mantec2-back:latest
-          docker push mantecsystems/mantec2-back:${IMAGE_TAG}
-
-      - name: Atualizar stack
-        run: |
-          docker pull mantecsystems/mantec2-back:latest
-
-          docker stack deploy \
-            -c /home/lemuel/stacks/05-apps/mantec2.yml \
-            mantec2
-
-      - name: Verificar deploy
-        run: |
-          docker stack services mantec2
+      # ===== DEPLOY DESATIVADO (legado) =====
+      # - name: Login Docker Hub
+      #   run: |
+      #     echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+      #
+      # - name: Push image
+      #   run: |
+      #     docker push mantecsystems/mantec2-back:latest
+      #     docker push mantecsystems/mantec2-back:${IMAGE_TAG}
+      #
+      # - name: Atualizar stack
+      #   run: |
+      #     docker pull mantecsystems/mantec2-back:latest
+      #     docker stack deploy \
+      #       -c /home/lemuel/stacks/05-apps/mantec2.yml \
+      #       mantec2
+      #
+      # - name: Verificar deploy
+      #   run: |
+      #     docker stack services mantec2
